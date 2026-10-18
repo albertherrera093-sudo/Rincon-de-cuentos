@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rincón de Cuentos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Quicksand:wght@500;600;700&family=Dancing+Script:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="libro.css">
+</head>
+<body>
+
+  <!-- Decoración flotante (se llena desde script.js) -->
+  <div class="decoracion" id="decoracion" aria-hidden="true">
+    <span class="nube nube-1">☁️</span>
+    <span class="nube nube-2">☁️</span>
+    <span class="nube nube-3">☁️</span>
+  </div>
+
+  <header class="cabecera">
+    <h1>Rincón de Cuentos</h1>
+    <p>Elige un cuento y abre el libro ✨</p>
+
+    <svg class="ola" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M0,64 C240,120 480,0 720,48 C960,96 1200,16 1440,64 L1440,120 L0,120 Z"></path>
+    </svg>
+  </header>
+
+  <main id="categorias">
+    <!-- Las categorías y tarjetas se crean desde script.js -->
+  </main>
+
+  <footer>
+    <p>Hecho con cariño 💖</p>
+  </footer>
+
+  <script src="libro.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
