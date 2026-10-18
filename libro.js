@@ -1,32 +1,11 @@
-// ---------- Textos de los cuentos ----------
-// Cada cuento es una lista de páginas. Cada página es un texto,
-// o un objeto { texto, imagen } si quieres elegir tú la imagen.
-// Si no pones imagen, se busca "imagenes/paginas/<id>-<número de página>.jpg"
-const historias = {
-    caperucita: [
-      "Había una vez una niña a la que todos llamaban Caperucita Roja, porque siempre llevaba una capa roja que le había regalado su abuelita.",
-      "Un día, su mamá le preparó una cesta con pan y miel. —Llévasela a tu abuelita, que está enferma —le dijo—. Ve por el camino y no hables con extraños.",
-      "Caperucita caminaba cantando por el bosque cuando apareció un lobo. —¿A dónde vas tan sola, niña? —le preguntó con voz suave.",
-      "—Voy a casa de mi abuelita —contestó Caperucita. El lobo sonrió con astucia y salió corriendo por un atajo para llegar antes que ella.",
-      "El lobo llegó a la casita, encerró a la abuelita en el armario y se metió en la cama con su camisón y su gorrito.",
-      "Cuando Caperucita entró, notó algo raro. —Abuelita, ¡qué ojos tan grandes tienes! —Son para verte mejor. —¡Y qué boca tan grande! —¡Es para comerte mejor!",
-      "Caperucita gritó con todas sus fuerzas. Un leñador que pasaba cerca la oyó y entró corriendo. El lobo se asustó tanto que huyó del bosque y no volvió jamás.",
-      "El leñador abrió el armario y la abuelita salió sana y salva. Las tres se abrazaron y compartieron el pan y la miel.",
-      "Desde aquel día, Caperucita siempre obedeció a su mamá y nunca más habló con extraños en el camino."
-    ],
-  
-    cerditos: [
-      "Había una vez tres cerditos hermanos que decidieron construir cada uno su propia casita para vivir seguros.",
-      "El primero, que era muy perezoso, hizo su casita de paja en un ratito para irse a jugar.",
-      "El segundo construyó la suya con palos de madera. Terminó rápido y se fue a cantar.",
-      "El tercero, el más trabajador, tardó muchos días en levantar una casa fuerte de ladrillos. —Así estaremos a salvo —decía.",
-      "Un día llegó un lobo grande y hambriento. —¡Soplaré y soplaré y tu casa derribaré! —y la casita de paja salió volando. El primer cerdito corrió a casa de su hermano.",
-      "El lobo sopló y sopló, y la casa de palos también se vino abajo. Los dos cerditos corrieron muertos de miedo a la casa de ladrillos.",
-      "El lobo sopló y sopló, pero la casa de ladrillos ni se movió. Entonces trepó al tejado para entrar por la chimenea.",
-      "Los cerditos pusieron una olla con agua caliente junto al fuego. Cuando el lobo bajó, ¡plaf!, cayó en la olla, pegó un brinco y salió corriendo para no volver nunca más.",
-      "Los tres cerditos vivieron felices en la casa de ladrillos. Y aprendieron que el trabajo bien hecho siempre vale la pena."
-    ]
-  };
+// ---------- Mensajes de la calificación ----------
+const MENSAJES_ESTRELLAS = [
+    "¡Gracias por decirnos! Buscaremos cuentos que te gusten más.",
+    "¡Gracias! Seguiremos mejorando.",
+    "¡Qué bien! Gracias por tu opinión.",
+    "¡Genial! Nos alegra que te haya gustado.",
+    "¡Wow! ¡Te encantó este cuento!"
+  ];
   
   // ---------- Voz narradora ----------
   const hayVoz = "speechSynthesis" in window;
@@ -56,11 +35,13 @@ const historias = {
     speechSynthesis.addEventListener("voiceschanged", elegirVoz);
   }
   
-  // Limpia el texto para que se lea bien en voz alta
+  // Texto que se lee en voz alta en cada tipo de página
   function textoParaVoz(p) {
     let t;
     if (p.tipo === "portada") t = p.titulo;
+    else if (p.tipo === "preguntas") t = p.titulo + ". " + p.lista.join(" ");
     else if (p.tipo === "fin") t = "Fin. " + p.etiqueta + ": " + p.texto;
+    else if (p.tipo === "calificar") t = "¿Qué te pareció el cuento? Toca las estrellas para calificarlo.";
     else t = p.texto;
   
     return t
@@ -70,9 +51,17 @@ const historias = {
       .trim();
   }
   
+  // Cantidad de texto de una página (para calcular cuánto dura)
+  function largoPagina(p) {
+    if (p.tipo === "cuento" || p.tipo === "fin") return p.texto.length;
+    if (p.tipo === "preguntas") return p.lista.join(" ").length;
+    return 0;
+  }
+  
   // ---------- Armado de las páginas ----------
   function crearPaginas(cuento, categoria) {
     const textos = historias[cuento.id] || ["Este cuento llegará muy pronto al Rincón de Cuentos."];
+    const preg = preguntas[cuento.id] || preguntasGenerales;
     const paginas = [];
   
     paginas.push({
@@ -82,10 +71,12 @@ const historias = {
       imagen: cuento.imagen || "imagenes/" + cuento.id + ".jpg"
     });
   
+    paginas.push({ tipo: "preguntas", titulo: "Antes de leer", lista: preg.antes });
+  
     textos.forEach((item, i) => {
       const texto = typeof item === "string" ? item : item.texto;
       const imagen = (typeof item === "object" && item.imagen) || "imagenes/paginas/" + cuento.id + "-" + (i + 1) + ".jpg";
-      paginas.push({ tipo: "cuento", texto, imagen });
+      paginas.push({ tipo: "cuento", texto, imagen, numero: i + 1 });
     });
   
     paginas.push({
@@ -93,6 +84,9 @@ const historias = {
       etiqueta: categoria && categoria.etiqueta ? categoria.etiqueta : "Lo que aprendimos",
       texto: cuento.tema
     });
+  
+    paginas.push({ tipo: "preguntas", titulo: "Después de leer", lista: preg.despues });
+    paginas.push({ tipo: "calificar" });
   
     return paginas;
   }
@@ -126,7 +120,7 @@ const historias = {
     return div;
   }
   
-  function crearFrente(p, numero) {
+  function crearFrente(p, alCalificar) {
     const frente = document.createElement("div");
     frente.className = "cara frente";
   
@@ -148,6 +142,24 @@ const historias = {
       autor.textContent = p.autor;
   
       frente.append(crearImagen(p.imagen, "Portada de " + p.titulo), titulo, autor);
+  
+    } else if (p.tipo === "preguntas") {
+      const caja = document.createElement("div");
+      caja.className = "preguntas";
+  
+      const h2 = document.createElement("h2");
+      h2.textContent = p.titulo;
+  
+      const lista = document.createElement("ol");
+      p.lista.forEach((pregunta) => {
+        const li = document.createElement("li");
+        li.textContent = pregunta;
+        lista.appendChild(li);
+      });
+  
+      caja.append(h2, lista);
+      frente.appendChild(caja);
+  
     } else if (p.tipo === "fin") {
       const fin = document.createElement("div");
       fin.className = "fin";
@@ -160,6 +172,51 @@ const historias = {
   
       fin.append(h2, texto);
       frente.appendChild(fin);
+  
+    } else if (p.tipo === "calificar") {
+      const caja = document.createElement("div");
+      caja.className = "calificar";
+  
+      const h2 = document.createElement("h2");
+      h2.textContent = "¿Qué te pareció el cuento?";
+  
+      const fila = document.createElement("div");
+      fila.className = "estrellas";
+  
+      const mensaje = document.createElement("p");
+      mensaje.className = "mensaje-estrellas";
+      mensaje.textContent = "Toca las estrellas para calificarlo";
+  
+      const botones = [1, 2, 3, 4, 5].map((n) => {
+        const b = document.createElement("button");
+        b.className = "estrella-btn";
+        b.textContent = "★";
+        b.setAttribute("aria-label", n === 1 ? "1 estrella" : n + " estrellas");
+  
+        // Al pasar el cursor se iluminan las estrellas hasta esa
+        b.addEventListener("mouseenter", () => {
+          botones.forEach((x, i) => x.classList.toggle("previa", i < n));
+        });
+  
+        b.addEventListener("click", () => {
+          botones.forEach((x) => x.classList.remove("activa"));
+          void fila.offsetWidth;   // reinicia la animación
+          botones.forEach((x, i) => x.classList.toggle("activa", i < n));
+          mensaje.textContent = MENSAJES_ESTRELLAS[n - 1];
+          alCalificar(n);
+        });
+  
+        return b;
+      });
+  
+      fila.addEventListener("mouseleave", () => {
+        botones.forEach((x) => x.classList.remove("previa"));
+      });
+  
+      fila.append(...botones);
+      caja.append(h2, fila, mensaje);
+      frente.appendChild(caja);
+  
     } else {
       const texto = document.createElement("p");
       texto.className = "texto";
@@ -167,9 +224,9 @@ const historias = {
   
       const num = document.createElement("span");
       num.className = "num";
-      num.textContent = numero;
+      num.textContent = p.numero;
   
-      frente.append(crearImagen(p.imagen, "Ilustración de la página " + numero), texto, num);
+      frente.append(crearImagen(p.imagen, "Ilustración de la página " + p.numero), texto, num);
     }
   
     return frente;
@@ -225,7 +282,7 @@ const historias = {
       const dorso = document.createElement("div");
       dorso.className = "cara dorso";
   
-      hoja.append(crearFrente(p, i), dorso);
+      hoja.append(crearFrente(p, calificar), dorso);
       contenedorHojas.appendChild(hoja);
       return hoja;
     });
@@ -237,18 +294,17 @@ const historias = {
       if (hayVoz) speechSynthesis.cancel();
     }
   
-    function hablarPagina() {
+    // Lee un texto; al terminar pasa a la página siguiente tras "pausaFinal"
+    function hablarTexto(texto, pausaFinal, espera) {
       detenerVoz();
       if (!narrar) return;
-      if (pausado && actual !== ultima) return;
   
       const mi = idLectura;
   
-      // Esperamos a que termine de girar la hoja antes de empezar a leer
       temporizadorVoz = setTimeout(() => {
         if (mi !== idLectura) return;
   
-        const u = new SpeechSynthesisUtterance(textoParaVoz(paginas[actual]));
+        const u = new SpeechSynthesisUtterance(texto);
         u.lang = vozElegida ? vozElegida.lang : "es-MX";
         if (vozElegida) u.voice = vozElegida;
         u.rate = 0.9;     // un poco más lenta, ideal para cuentos
@@ -259,19 +315,56 @@ const historias = {
           if (!pausado && actual < ultima) {
             temporizadorVoz = setTimeout(() => {
               if (mi === idLectura) irA(actual + 1);
-            }, 900);
+            }, pausaFinal);
           }
         };
   
         u.onend = siguiente;
         u.onerror = siguiente;   // si algo falla, no nos quedamos trabados
         speechSynthesis.speak(u);
-      }, 800);
+      }, espera);
+    }
+  
+    function hablarPagina() {
+      if (!narrar || (pausado && actual !== ultima)) {
+        detenerVoz();
+        return;
+      }
+      const p = paginas[actual];
+      // En las preguntas esperamos más para que haya tiempo de pensar
+      const pausaFinal = p.tipo === "preguntas" ? 3500 : 900;
+      // Esperamos a que termine de girar la hoja antes de empezar a leer
+      hablarTexto(textoParaVoz(p), pausaFinal, 800);
     }
   
     function actualizarVoz() {
       btnVoz.textContent = narrar ? "🔊" : "🔇";
       btnVoz.setAttribute("aria-label", narrar ? "Quitar la voz" : "Activar la voz");
+    }
+  
+    // ----- Calificación con estrellas -----
+    function lluviaDeEstrellas(n) {
+      const cantidad = n * 12;   // 1 estrella = 12 estrellas cayendo, 5 = 60
+      const colores = ["#ffc93c", "#ff7eb3", "#5fbbe8", "#fff3b0"];
+  
+      for (let i = 0; i < cantidad; i++) {
+        const e = document.createElement("span");
+        e.className = "estrella-cae";
+        e.textContent = i % 3 ? "★" : "✦";
+        e.style.left = Math.random() * 100 + "%";
+        e.style.fontSize = 18 + Math.random() * 28 + "px";
+        e.style.color = colores[Math.floor(Math.random() * colores.length)];
+        e.style.animationDuration = 2.5 + Math.random() * 2.5 + "s";
+        e.style.animationDelay = Math.random() * 1.5 + "s";
+        e.addEventListener("animationend", () => e.remove());
+        raiz.appendChild(e);
+      }
+    }
+  
+    function calificar(n) {
+      lluviaDeEstrellas(n);
+      hablarTexto(MENSAJES_ESTRELLAS[n - 1], 0, 150);
+      mostrarControles();
     }
   
     // ----- Controles: se ven al mover el cursor o tocar la pantalla -----
@@ -308,9 +401,10 @@ const historias = {
   
       barra.style.width = "";
       const p = paginas[actual];
-      const largo = p.tipo === "cuento" ? p.texto.length : 0;
+      const largo = largoPagina(p);
+      const extra = p.tipo === "preguntas" ? 3000 : 0;   // tiempo para pensar
       // Con voz, la barra es solo una guía; con la voz apagada marca el tiempo real
-      const ms = narrar ? 1500 + largo * 80 : 4000 + largo * 55;
+      const ms = (narrar ? 1500 + largo * 80 : 4000 + largo * 55) + extra;
       barra.style.animation = "llenar " + ms + "ms linear forwards";
       barra.style.animationPlayState = pausado ? "paused" : "running";
     }
@@ -328,7 +422,7 @@ const historias = {
       actual = n;
       hojas.forEach((hoja, i) => hoja.classList.toggle("pasada", i < actual));
   
-      if (actual === ultima) pausado = true;   // al terminar, se detiene
+      if (actual === ultima) pausado = true;   // en la calificación se detiene
       reiniciarBarra();
       actualizarBoton();
       hablarPagina();
