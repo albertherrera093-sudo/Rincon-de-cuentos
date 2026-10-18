@@ -317,3 +317,146 @@
     from { transform: scale(0.7) rotateX(18deg); opacity: 0; }
     to   { transform: scale(1) rotateX(0); opacity: 1; }
   }
+
+  /* ---------- Páginas de preguntas ---------- */
+.preguntas {
+    margin: auto;
+    width: min(100%, 780px);
+    text-align: center;
+  }
+  
+  .preguntas h2,
+  .calificar h2 {
+    font-family: "Pacifico", cursive;
+    font-weight: 400;
+    font-size: clamp(1.8rem, 4.2vw, 3.2rem);
+    color: var(--rosa-fuerte);
+    text-shadow: 2px 2px 0 rgba(95, 187, 232, 0.5);
+  }
+  
+  .preguntas h2 {
+    margin-bottom: clamp(12px, 3vh, 28px);
+  }
+  
+  .preguntas ol {
+    list-style: none;
+    counter-reset: pregunta;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(10px, 2vh, 20px);
+  }
+  
+  .preguntas li {
+    counter-increment: pregunta;
+    position: relative;
+    text-align: left;
+    padding: 12px 18px 12px 70px;
+    font-family: "Dancing Script", cursive;
+    font-weight: 700;
+    font-size: clamp(1.2rem, 1.6vw + 1.6vh, 2.2rem);
+    line-height: 1.25;
+    color: var(--texto);
+    background: rgba(255, 255, 255, 0.7);
+    border: 3px solid var(--rosa);
+    border-radius: 18px;
+    box-shadow: 0 4px 0 var(--celeste);
+  }
+  
+  .preguntas li:nth-child(even) {
+    border-color: var(--celeste);
+    box-shadow: 0 4px 0 var(--rosa);
+  }
+  
+  .preguntas li::before {
+    content: counter(pregunta);
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--rosa-fuerte), var(--celeste-fuerte));
+    color: #fff;
+    font-family: "Quicksand", sans-serif;
+    font-weight: 700;
+    font-size: 1.2rem;
+  }
+  
+  /* ---------- Página de calificación ---------- */
+  .calificar {
+    margin: auto;
+    text-align: center;
+  }
+  
+  .estrellas {
+    display: flex;
+    justify-content: center;
+    gap: clamp(6px, 1.5vw, 18px);
+    margin: clamp(14px, 3vh, 30px) 0;
+  }
+  
+  .estrella-btn {
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: clamp(2.6rem, 8vw, 5.5rem);
+    line-height: 1;
+    color: #e4d6c3;
+    text-shadow: 0 3px 0 rgba(201, 149, 74, 0.35);
+    transition: transform 0.2s ease, color 0.2s ease;
+  }
+  
+  .estrella-btn:hover {
+    transform: scale(1.2) rotate(-8deg);
+  }
+  
+  .estrella-btn.previa {
+    color: #ffe08a;
+  }
+  
+  .estrella-btn.activa {
+    color: #ffc93c;
+    text-shadow: 0 0 14px rgba(255, 201, 60, 0.8), 0 3px 0 rgba(201, 149, 74, 0.5);
+    animation: pop 0.45s ease;
+  }
+  
+  .mensaje-estrellas {
+    min-height: 2.6em;
+    font-family: "Dancing Script", cursive;
+    font-weight: 700;
+    font-size: clamp(1.4rem, 3vw, 2.2rem);
+    line-height: 1.3;
+    color: var(--texto);
+  }
+  
+  @keyframes pop {
+    0%   { transform: scale(0.6); }
+    60%  { transform: scale(1.35); }
+    100% { transform: scale(1); }
+  }
+  
+  /* ---------- Lluvia de estrellas ---------- */
+  .estrella-cae {
+    position: fixed;
+    top: -60px;
+    z-index: 1001;
+    pointer-events: none;
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.9);
+    animation: caer linear forwards;
+  }
+  
+  @keyframes caer {
+    from { transform: translateY(0) rotate(0deg); opacity: 1; }
+    to   { transform: translateY(115vh) rotate(540deg); opacity: 0.9; }
+  }
+    to   { opacity: 0; }
+  }
+  
+  @keyframes abrir {
+    from { transform: scale(0.7) rotateX(18deg); opacity: 0; }
+    to   { transform: scale(1) rotateX(0); opacity: 1; }
+  }
